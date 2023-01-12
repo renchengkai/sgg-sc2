@@ -59,14 +59,12 @@ def to_image_list(tensors, size_divisible=0):
             max_size[1] = int(math.ceil(max_size[1] / stride) * stride)
             max_size[2] = int(math.ceil(max_size[2] / stride) * stride)
             max_size = tuple(max_size)
-
         batch_shape = (len(tensors),) + max_size
         batched_imgs = tensors[0].new(*batch_shape).zero_()
         for img, pad_img in zip(tensors, batched_imgs):
             pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
 
         image_sizes = [im.shape[-2:] for im in tensors]
-
         return ImageList(batched_imgs, image_sizes)
     else:
         raise TypeError("Unsupported type for to_image_list: {}".format(type(tensors)))

@@ -56,7 +56,6 @@ def train(cfg, local_rank, distributed, logger):
             # this should be removed if we update BatchNorm stats
             broadcast_buffers=False,
         )
-
     arguments = {}
     arguments["iteration"] = 0
 
@@ -98,6 +97,7 @@ def train(cfg, local_rank, distributed, logger):
         
         if any(len(target) < 1 for target in targets):
             logger.error(f"Iteration={iteration + 1} || Image Ids used for training {_} || targets Length={[len(target) for target in targets]}" )
+            print(targets,images.image_sizes)
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
@@ -106,10 +106,10 @@ def train(cfg, local_rank, distributed, logger):
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
-
+        
         loss_dict = model(images, targets)
-
         losses = sum(loss for loss in loss_dict.values())
+        
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = reduce_loss_dict(loss_dict)
@@ -305,7 +305,8 @@ def main():
     model = train(cfg, args.local_rank, args.distributed, logger)
 
     if not args.skip_test:
-        run_test(cfg, model, args.distributed)
+        print('>'*20)
+        # run_test(cfg, model, args.distributed)
 
 
 if __name__ == "__main__":

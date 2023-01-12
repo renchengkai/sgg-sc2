@@ -55,7 +55,7 @@ def main():
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
-
+    
     save_dir = ""
     logger = setup_logger("maskrcnn_benchmark", save_dir, get_rank())
     logger.info("Using {} GPUs".format(num_gpus))
@@ -87,7 +87,6 @@ def main():
     output_folders = [None] * len(cfg.DATASETS.TEST)
 
     dataset_names = cfg.DATASETS.TEST
-
     # This variable enables the script to run the test on any dataset split.
     if cfg.DATASETS.TO_TEST:
         assert cfg.DATASETS.TO_TEST in {'train', 'val', 'test', None}

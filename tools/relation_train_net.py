@@ -103,7 +103,9 @@ def train(cfg, local_rank, distributed, logger):
         arguments.update(extra_checkpoint_data)
     else:
         # load_mapping is only used when we init current model from detection model.
+        # print(cfg.MODEL.PRETRAINED_DETECTOR_CKPT)
         checkpointer.load(cfg.MODEL.PRETRAINED_DETECTOR_CKPT, with_optim=False, load_mapping=load_mapping)
+        pass
     debug_print(logger, 'end load checkpointer')
     train_data_loader = make_data_loader(
         cfg,
@@ -241,10 +243,10 @@ def run_val(cfg, model, val_data_loaders, distributed, logger):
         iou_types = iou_types + ("relations", )
     if cfg.MODEL.ATTRIBUTE_ON:
         iou_types = iou_types + ("attributes", )
-
     dataset_names = cfg.DATASETS.VAL
     val_result = []
     for dataset_name, val_data_loader in zip(dataset_names, val_data_loaders):
+        print(len(val_data_loader))
         dataset_result = inference(
                             cfg,
                             model,

@@ -35,3 +35,7 @@ datasets/vg/
 # MacOS
 .DS_Store
 
+# VG_100K
+datasets/vg1/
+checkpoints/
+generateData/*

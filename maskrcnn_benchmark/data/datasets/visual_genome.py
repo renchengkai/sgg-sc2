@@ -37,7 +37,8 @@ class VGDataset(torch.utils.data.Dataset):
         # for debug
         # num_im = 10000
         # num_val_im = 4
-
+        f = h5py.File(roidb_file, 'r')
+        num_val_im=sum(f['split'][:]==2)
         assert split in {'train', 'val', 'test'}
         self.flip_aug = flip_aug
         self.split = split
@@ -61,9 +62,8 @@ class VGDataset(torch.utils.data.Dataset):
                 filter_empty_rels=filter_empty_rels,
                 filter_non_overlap=self.filter_non_overlap,
             )
-
             self.filenames, self.img_info = load_image_filenames(img_dir, image_file) # length equals to split_mask
-            self.filenames = [self.filenames[i] for i in np.where(self.split_mask)[0]]
+            self.filenames = [self.filenames[i] for i in np.where(self.split_mask)[0]]#这里 会出问题 eval
             self.img_info = [self.img_info[i] for i in np.where(self.split_mask)[0]]
 
 
@@ -85,13 +85,13 @@ class VGDataset(torch.utils.data.Dataset):
         flip_img = (random.random() > 0.5) and self.flip_aug and (self.split == 'train')
         
         target = self.get_groundtruth(index, flip_img)
-
+        assert target.bbox.shape[0]>0,'error bbox!'
         if flip_img:
             img = img.transpose(method=Image.FLIP_LEFT_RIGHT)
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)
-
+        # print(img.shape,target)
         return img, target, index
 
 
@@ -134,13 +134,18 @@ class VGDataset(torch.utils.data.Dataset):
         # it will take a while, you only need to do it once
 
         # correct_img_info(self.img_dir, self.image_file)
+        
         return self.img_info[index]
-
+        
+            
     def get_groundtruth(self, index, evaluation=False, flip_img=False):
         img_info = self.get_img_info(index)
         w, h = img_info['width'], img_info['height']
         # important: recover original box from BOX_SCALE
-        box = self.gt_boxes[index] / BOX_SCALE * max(w, h)
+        # ??????????????????????? WHY?  ####################
+        #box = self.gt_boxes[index] / BOX_SCALE * max(w, h)#
+        ####################################################
+        box = self.gt_boxes[index] 
         box = torch.from_numpy(box).reshape(-1, 4)  # guard against no boxes
         if flip_img:
             new_xmin = w - box[:,2]
@@ -173,13 +178,13 @@ class VGDataset(torch.utils.data.Dataset):
             else:
                 relation_map[int(relation[i,0]), int(relation[i,1])] = int(relation[i,2])
         target.add_field("relation", relation_map, is_triplet=True)
-
+        assert len(target)>0,'before return clip'
         if evaluation:
             target = target.clip_to_image(remove_empty=False)
             target.add_field("relation_tuple", torch.LongTensor(relation)) # for evaluation
             return target
         else:
-            target = target.clip_to_image(remove_empty=True)
+            target = target.clip_to_image(remove_empty=False)
             return target
 
     def __len__(self):
@@ -302,7 +307,11 @@ def load_image_filenames(img_dir, image_file):
     with open(image_file, 'r') as f:
         im_data = json.load(f)
 
-    corrupted_ims = ['1592.jpg', '1722.jpg', '4616.jpg', '4617.jpg']
+    # corrupted_ims = ['1592.jpg', '1722.jpg', '4616.jpg', '4617.jpg']
+    corrupted_ims = []
+
+    # corrupted_ims = ['1373.jpg']
+    
     fns = []
     img_info = []
     for i, img in enumerate(im_data):
@@ -314,8 +323,8 @@ def load_image_filenames(img_dir, image_file):
         if os.path.exists(filename):
             fns.append(filename)
             img_info.append(img)
-    assert len(fns) == 108073
-    assert len(img_info) == 108073
+    # assert len(fns) == 108073
+    # assert len(img_info) == 108073
     return fns, img_info
 
 
@@ -421,7 +430,6 @@ def load_graphs(roidb_file, split, num_im, num_val_im, filter_empty_rels, filter
             else:
                 split_mask[image_index[i]] = 0
                 continue
-
         boxes.append(boxes_i)
         gt_classes.append(gt_classes_i)
         gt_attributes.append(gt_attributes_i)

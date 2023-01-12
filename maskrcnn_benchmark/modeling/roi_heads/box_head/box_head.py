@@ -101,7 +101,7 @@ class ROIBoxHead(torch.nn.Module):
                 result.add_field("features", x.cpu().numpy())
 
             return x, result, {}
-
+       
         loss_classifier, loss_box_reg = self.loss_evaluator([class_logits], [box_regression], proposals)
 
         return x, proposals, dict(loss_classifier=loss_classifier, loss_box_reg=loss_box_reg)

@@ -31,7 +31,12 @@ def compute_on_dataset(model, data_loader, device, synchronize_gather=True, time
                 output = im_detect_bbox_aug(model, images, device)
             else:
                 # relation detection needs the targets
-                output = model(images.to(device), targets)
+                try:
+                # print(images,targets,"))))))))))")
+                    output = model(images.to(device), targets)
+                # print(output)
+                except:
+                    print(images.tensors.shape,targets,output)
             if timer:
                 if not cfg.MODEL.DEVICE == 'cpu':
                     torch.cuda.synchronize()
