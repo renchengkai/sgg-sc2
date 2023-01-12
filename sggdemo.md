@@ -7,6 +7,7 @@
 3. 根据标注数据JSON文件，生成SGG训练所需格式
 
 4. 完成训练SGG模型（算法IMP）
+
    ![](https://github.com/renchengkai/sggdata-prepare/blob/master/sggdet.png)
    ~~~
    **************************************************
